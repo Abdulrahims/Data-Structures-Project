@@ -1,6 +1,8 @@
 # Data-Structures-Project
 Final project for Algorithms &amp; Data Structures 
 
+(This includes only the .java files and not the Map jpeg file or the csv files for venue locations.)
+
 Team members: (Team Allez)
 Abdul Sheikhnureldin
 Remi Galvez
