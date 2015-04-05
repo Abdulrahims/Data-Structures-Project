@@ -1,0 +1,197 @@
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.ListIterator;
+
+
+public class ItinCalc {
+
+	private ArrayList<Venue> venues = new ArrayList<Venue>(); // List of all nearby venues (of all types)
+	public ArrayList<Tree> trees = new ArrayList<Tree>(); // List of Trees
+	private int x, y; 
+	
+	private boolean restaurantDesired = false;
+	private boolean barDesired = false;
+	private boolean clubDesired = false;
+	
+	private boolean restaurantFound = false;
+	private boolean barFound = false;
+	private boolean clubFound = false;
+	
+	public ItinCalc(int x, int y, LinkedList<String> venueTypes) {
+		this.x = x;
+		this.y = y;
+		
+		ListIterator<String> iter = venueTypes.listIterator();
+		
+		for (int i = 0; i < venueTypes.size(); i++) {
+			if (venueTypes.get(i).equals("restaurant")) restaurantDesired = true;
+			else if (venueTypes.get(i).equals("bar")) barDesired = true;
+			else if (venueTypes.get(i).equals("club")) clubDesired = true;	
+		}
+		
+		allVenues();
+		
+		venueTypes.getFirst();
+		while (iter.hasNext()) { // Makes trees according to type
+			trees.add(treeMaker(venues, iter.next()));
+		}
+	}
+
+	/**
+	 * Creates single BST for a specified venue type, based on score system. 
+	 * @param venues - ArrayList of all venues 
+	 * @param type - Venue type
+	 * @return BST of a specified venue
+	 */
+	public Tree treeMaker(ArrayList<Venue> venues, String type) {
+		
+		int count = 0;
+		
+		Tree tree = new Tree();
+		
+		for (int i = count; i < venues.size(); i++) {
+			if (venues.get(i).getType().equals(type)) {
+				if (tree.isEmpty()) tree.setRoot(venues.get(i));
+				else tree.add(venues.get(i));
+			}
+		}
+		
+		if (tree.isEmpty()) {
+			Venue venue = new Venue(type, "No match was found for this category", 0, "_", x, y);
+			tree.add(venue);
+		}
+				
+		return tree;
+	}
+	
+	
+	/**
+	 * Gets venues from initial location on the grid, and all locations directly surrounding it 
+	 */
+	public void allVenues() {
+		Location.clear();
+		getLocalVenues(x,y); Location.visit(x,y);
+		allVenues(1);
+	}
+	
+	public void allVenues(int i) {
+		
+		int[] c1 = new int[2]; // 4 corner locations to make a square to search for venues
+		int[] c2 = new int[2];
+		int[] c3 = new int[2];
+		int[] c4 = new int[2];
+		
+		if (x >= i) {
+			c1[0] = x-i;
+			c4[0] = x-i;
+		} else {
+			c1[0] = 0;
+			c4[0] = 0;
+		}
+		
+		if (y >= i) {
+			c1[1] = y-i;
+			c2[1] = y-i;
+		} else {
+			c1[1] = 0;
+			c2[1] = 0;
+		}
+		
+		if (x < 5-i) {
+			c2[0] = x+i;
+			c3[0] = x+i;
+		} else {
+			c2[0] = 4;
+			c3[0] = 4;
+		}
+		
+		if (y < 5-i) {
+			c3[1] = y+i;
+			c4[1] = y+i; 
+		} else {
+			c3[1] = 4;
+			c4[1] = 4;
+		}
+		
+		for (int k = c1[0]; k <= c2[0]; k++) {
+			if (!Location.visited(k,c1[1])) {
+				getLocalVenues(k, c1[1]); 
+				Location.visit(k,c1[1]);
+			}
+			if (!Location.visited(k,c4[1])) {
+				getLocalVenues(k, c4[1]); 
+				Location.visit(k,c4[1]);
+			}
+		}
+		for (int l = c1[1]; l < c4[1]; l++) {
+			if (!Location.visited(c1[0],l)) {
+				getLocalVenues(c1[0], l); 
+				Location.visit(c1[0],l);
+			}
+			if (!Location.visited(c4[0],l)) {
+				getLocalVenues(c4[0], l); 
+				Location.visit(c4[0],l);
+			}
+		}
+		
+		if (found()) return;
+		else allVenues(i+1);
+	} 
+	
+	/**
+	 * Gets all venues from a certain location on the grid
+	 * @param x - x-Coordinate
+	 * @param y - y-Coordinate
+	 */
+	public void getLocalVenues(int x, int y) {
+		
+		ArrayList<String[]> data = DatabaseReader.getVenues(x,y);
+		
+		for (int i = 0; i < data.size(); i++) {
+			venues.add(venueObject(data.get(i)));
+		}
+		
+	}
+	
+	/**
+	 * Creates Venue object from array of String to set coordinates
+	 * @param venue - String Array
+	 * @param x - x-Coordinate
+	 * @param y - y-Coordinate
+	 * @return
+	 */
+	public Venue venueObject(String[] venue) {
+		//0 - Name || 1 - Address || 2 - Rating || 3 - Type
+		double rating = Double.parseDouble(venue[2]);
+		int x = Integer.parseInt(venue[4]);
+		int y = Integer.parseInt(venue[5]);
+		
+		Venue venueName = new Venue(venue[3], venue[0], rating, venue[1], x, y);
+
+		if (venue[3].equals("restaurant")) {
+			this.restaurantFound = true;
+		}
+		else if (venue[3].equals("bar")) {
+			this.barFound = true;
+		}
+		else if (venue[3].equals("club")) { 
+			this.clubFound = true;
+		}
+		return venueName;
+	}
+	
+	/**
+	 * Checks if at least one of each desired Venue types were found.
+	 * @return boolean
+	 */
+	public boolean found() {
+		if (restaurantDesired) {
+			if (!restaurantFound) return false;
+		} if (barDesired) {
+			if (!barFound) return false;
+		} if (clubDesired) {
+			if (!clubFound) return false;
+		}
+		return true;
+	}
+}
