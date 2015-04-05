@@ -1,0 +1,35 @@
+public class Location {
+
+	private int x, y;
+	public static int[][] visited = new int[5][5];
+	
+	public Location(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public int getX() {
+		return x;
+	}
+	
+	public int getY() {
+		return y;
+	}
+	
+	public static void visit(int x, int y) {
+		visited[x][y] = 1;
+	}
+	
+	public static boolean visited(int x, int y) {
+		return visited[x][y] != 0;
+	}
+	
+	public static void clear() {
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 5; j++) {
+				visited[i][j] = 0;
+			}
+		}
+	}
+	
+}
